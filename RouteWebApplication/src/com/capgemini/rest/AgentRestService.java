@@ -187,7 +187,7 @@ public class AgentRestService {
 	}
 
 	/**
-	 * This method publishes a command to the device with ID "aca21322819c" and
+	 * This method publishes a command to the device with ID and
 	 * Type "Raspberry". The published command contains the vin of the closest
 	 * ambulance, the latitude and the longitude of the emergency location
 	 */
@@ -195,15 +195,14 @@ public class AgentRestService {
 		String emergencyCommand = "emergencyCommand";
 		JsonObject data = new JsonObject();
 
-		data.addProperty("vin", closestAmbulance);
-		data.addProperty("emergencyLatitude", Double.toString(emergencyLatitude));
-		data.addProperty("emergencyLongitude", Double.toString(emergencyLongitude));
-		data.addProperty("emergencyID", emergencyID);
+		//TODO: create command
+		//data.addProperty("", );
 
+		//TODO:Change Device ID
 		// Publish a command to the device with the id aca21322819c containing
 		// the vin of the ambulance which must be
 		// drive to the emergency location and the location of the emergency
-		AgentListener.getAgent().getClient().publishCommand("RaspberryPi", "aca21322819c", emergencyCommand, data, 0);
+		AgentListener.getAgent().getClient().publishCommand("RaspberryPi", "Your-Device-ID", emergencyCommand, data, 0);
 
 	}
 
