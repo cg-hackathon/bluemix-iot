@@ -1,4 +1,3 @@
-<!-- This is an html file without Capgemini logo -->
 <!DOCTYPE html>
 <html>
 <head>
@@ -21,8 +20,8 @@
 	var traffic = TrafficMonitor({
 		map : "map",
 		controls : true,
-		latitude : 51.530784,  
-		longitude : -0.102517,
+		latitude : 51.530784,  //48.128,
+		longitude : -0.102517, //11.670,
 		zoom : 15,
 		zoomMinus : 8,
 		zoomPlus : 3
@@ -35,10 +34,9 @@
 		maxReconnectAttempts : 10
 	};
 
-	
-	// TODO use case 1 Enter the path of configured Websocket in your Node-RED instance
+	//Enter the path of Websocket 
 	var websocket = new ReconnectingWebSocket(
-			"ws://your_websocket_url",
+			"ws://noderedsolutionhackathon.mybluemix.net/ws",
 			null, wsOptions);
 	websocket.onmessage = function(e) {
 		var d = JSON.parse(e.data).d;
@@ -58,10 +56,11 @@
 			longitude : lng
 		};
 		
-		
-		// TODO use case 2  Enter the URL of your defined REST service
 		$.ajax({
-			url : 'url of your rest service',
+			/* TODO AJUST TO YOUR ENVIRONMENT! In local tests you must add the context root of your app. */
+			url : 'http://' + window.location.host + '/postEmergencyPosition',
+			/* url : 'http://' + window.location.host + '/RouteWebApplication/postEmergencyPosition', */
+			/* END OF AJUSTMENT TO YOUR ENVIRONMENT! */
 			type : 'POST',
 			data : JSON.stringify(location),
 			dataType : 'json',
