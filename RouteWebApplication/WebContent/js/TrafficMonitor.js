@@ -17,6 +17,8 @@ var TrafficMonitor = (function(conf) {
 	var ambulances = {};
 	
 	var orders = {};
+	var circles = {};
+	
 	var emergencyID = 0;
 	var reached = {};
 
@@ -95,11 +97,18 @@ var TrafficMonitor = (function(conf) {
 			orders[emergencyID] = order;
 		}
 		
+		drawCircle(lat, lng, 50, emergencyID);
 		
 		clickAction(lat, lng, emergencyID);
 		
 	}
 
+	function drawCircle(lat, lng, radius, emergencyID){	
+		var circle = L.circle([lat, lng], radius).addTo(map);
+		circles[emergencyID] = circle;		
+	}
+	
+	
 	function updateAmbulance(car) {		
 		
 		var c = ambulances[car.vin];	
@@ -123,8 +132,10 @@ var TrafficMonitor = (function(conf) {
 			
 			if (reached[car.vin] == "false"){
 				reached[car.vin] = "true";
-				if (car.emergencyID != -1)
-				map.removeLayer(orders[car.emergencyID]);
+				if (car.emergencyID != -1){
+					map.removeLayer(orders[car.emergencyID]);
+					map.removeLayer(circles[car.emergencyID]);
+					}
 			}
 			
 
