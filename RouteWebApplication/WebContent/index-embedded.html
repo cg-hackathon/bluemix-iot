@@ -34,9 +34,9 @@
 		maxReconnectAttempts : 10
 	};
 
-	//Enter the path of Websocket 
+	// TODO use case 3 Enter the path of configured Websocket in your Node-RED instance 
 	var websocket = new ReconnectingWebSocket(
-			"ws://noderedsolutionhackathon.mybluemix.net/ws",
+			"ws://your_websocket_url",
 			null, wsOptions);
 	websocket.onmessage = function(e) {
 		var d = JSON.parse(e.data).d;
@@ -57,10 +57,10 @@
 		};
 		
 		$.ajax({
-			/* TODO AJUST TO YOUR ENVIRONMENT! In local tests you must add the context root of your app. */
+			/* TODO ADJUST TO YOUR ENVIRONMENT! In local tests you must add the context root of your app. */
 			url : 'http://' + window.location.host + '/postEmergencyPosition',
 			/* url : 'http://' + window.location.host + '/RouteWebApplication/postEmergencyPosition', */
-			/* END OF AJUSTMENT TO YOUR ENVIRONMENT! */
+			/* END OF ADJUSTMENT TO YOUR ENVIRONMENT! */
 			type : 'POST',
 			data : JSON.stringify(location),
 			dataType : 'json',
