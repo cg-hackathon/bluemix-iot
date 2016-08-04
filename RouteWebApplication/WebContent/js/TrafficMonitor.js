@@ -3,8 +3,8 @@ var TrafficMonitor = (function(conf) {
 	if (window.$ !== undefined) {
 		conf = $.extend({
 			map : "map",
-			latitude : 51.530784,  //48.128,
-			longitude :-0.102517,  //11.670,
+			latitude : 51.530784,  
+			longitude :-0.102517, 
 			zoom : 15,
 			zoomMinus : 0,
 			zoomPlus : 0,
@@ -47,7 +47,10 @@ var TrafficMonitor = (function(conf) {
 
 	function init() {
 
-		var mapConf = (conf.controls) ? {} : {
+		var mapConf = (conf.controls) ? {
+			zoomControl : false,
+			zoomAnimation : true
+		} : {
 			dragging : false,
 			zoomControl : false,
 			zoomAnimation : false,
@@ -66,6 +69,12 @@ var TrafficMonitor = (function(conf) {
 
 		map.setView(new L.LatLng(conf.latitude, conf.longitude), conf.zoom);
 		map.addLayer(osm);
+		
+		L.control.zoom({
+		     position:'bottomright'
+		}).addTo(map);
+		
+		
 		map.on('click', function(e) {
 			updateTarget(e.latlng.lat, e.latlng.lng);
 			//clickAction(e.latlng.lat, e.latlng.lng);
