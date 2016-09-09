@@ -42,6 +42,10 @@
 		if (d.hasOwnProperty('vin')) {
 			traffic.update(d);
 		}
+		
+		if (d.hasOwnProperty('emergency')){
+			traffic.setEmergency(d);
+		}
 	};
 
 	// Send the position of emergency (lat und lng) to the REST service that you defined by clicking on the map 
@@ -49,7 +53,6 @@
 
 		var location = {
 			cmd : "emergency",
-			emergencyID : id,
 			latitude : lat,
 			longitude : lng
 		};

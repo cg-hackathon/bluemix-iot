@@ -46,10 +46,10 @@ public class AgentRestService {
 	// emergency location
 	private String closestAmbulance;
 
-	private String emergencyID;
+	private int emergencyID = 0;
 	// private boolean freeAmbulance;
 
-	private ArrayList<HashMap<String, CurrentLocation>> emergencies = new ArrayList<HashMap<String, CurrentLocation>>();
+	private ArrayList<HashMap<Integer, CurrentLocation>> emergencies = new ArrayList<HashMap<Integer, CurrentLocation>>();
 
 	/**
 	 * This method will be called each time an emergency happens
@@ -72,15 +72,14 @@ public class AgentRestService {
 		emergencyLatitude = (Double) emergencyLocation.get("latitude");
 		// Get the longitude of the emergency location
 		emergencyLongitude = (Double) emergencyLocation.get("longitude");
-		// Get the id of emergency, this will be needed to remove the marker from the map when the ambulance reached the emergency location
-		emergencyID = emergencyLocation.get("emergencyID").toString();
-
+		
 		// if there is a free ambulance, find the closest one to the emergency location
 		if (getAmbulanceState())
 			findTheClosestAmbulance(emergencyLatitude, emergencyLongitude);
 		else {
 			// Otherwise if there is not a free ambulance, add the emergency in a queue
-			HashMap<String, CurrentLocation> emergency = new HashMap<String, CurrentLocation>();
+			HashMap<Integer, CurrentLocation> emergency = new HashMap<Integer, CurrentLocation>();
+			emergencyID++;
 			emergency.put(emergencyID, new CurrentLocation(emergencyLatitude, emergencyLongitude));
 			emergencies.add(emergency);
 
@@ -96,7 +95,7 @@ public class AgentRestService {
 
 				}
 				//Find the closest ambulance to the first emergency in the queue
-				for (Entry<String, CurrentLocation> entry : emergencies.get(0).entrySet()) {
+				for (Entry<Integer, CurrentLocation> entry : emergencies.get(0).entrySet()) {
 					findTheClosestAmbulance(entry.getValue().getCurrentLatitude(),
 							entry.getValue().getCurrentLongitude());
 					// Set the state of the closest ambulance to false

@@ -43,6 +43,10 @@
 		if (d.hasOwnProperty('vin')) {
 			traffic.update(d);
 		}
+		
+		if (d.hasOwnProperty('emergency')){
+			traffic.setEmergency(d);
+		}
 	};
 
 
@@ -51,7 +55,6 @@
 
 		var location = {
 			cmd : "emergency",
-			emergencyID : id,
 			latitude : lat,
 			longitude : lng
 		};

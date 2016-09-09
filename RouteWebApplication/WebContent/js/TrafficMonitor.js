@@ -19,8 +19,6 @@ var TrafficMonitor = (function(conf) {
 	var orders = {};
 	var circles = {};
 	
-	var emergencyID = 0;
-	var reached = {};
 
 	var icon = {
 		car : L.MakiMarkers.icon({
@@ -76,8 +74,7 @@ var TrafficMonitor = (function(conf) {
 		
 		
 		map.on('click', function(e) {
-			updateTarget(e.latlng.lat, e.latlng.lng);
-			//clickAction(e.latlng.lat, e.latlng.lng);
+			clickAction(e.latlng.lat, e.latlng.lng);
 		});
 		map.on('zoomend', function(e) {
 			map.panTo([ conf.latitude, conf.longitude ], {
@@ -94,22 +91,21 @@ var TrafficMonitor = (function(conf) {
 		clickAction = fn;
 	}
 
-	function updateTarget(lat, lng) {
-		emergencyID = emergencyID + 1;
-		var order = orders[emergencyID];
+	function setEmergency(emergency) {
+
+		var order = orders[emergency.vin];
+
 		if (order === undefined) {
-			order = L.marker([ lat, lng ], {
+			order = L.marker([ emergency.emergencyLatitude,
+					emergency.emergencyLongitude ], {
 				icon : icon.emergency
 			});
-		
+
 			order.addTo(map);
-			orders[emergencyID] = order;
+			orders[emergency.vin] = order;
+
 		}
-		
-		drawCircle(lat, lng, 50, emergencyID);
-		
-		clickAction(lat, lng, emergencyID);
-		
+
 	}
 
 	function drawCircle(lat, lng, radius, emergencyID){	
@@ -127,7 +123,6 @@ var TrafficMonitor = (function(conf) {
 						icon : icon.ambulance
 					});
 		
-			reached[car.vin] = "false";	
 			c.ts = new Date();
 			c.addTo(map);
 			ambulances[car.vin] = c;
@@ -139,12 +134,9 @@ var TrafficMonitor = (function(conf) {
 		if (car.isFree == "true") {
 			c.setIcon(icon.ambulance);
 			
-			if (reached[car.vin] == "false"){
-				reached[car.vin] = "true";
-				if (car.emergencyID != -1){
-					map.removeLayer(orders[car.emergencyID]);
-					map.removeLayer(circles[car.emergencyID]);
-					}
+			if (orders[car.vin] !== undefined) {
+				map.removeLayer(orders[car.vin]);
+				delete orders[car.vin];
 			}
 			
 
@@ -156,7 +148,6 @@ var TrafficMonitor = (function(conf) {
 			});
 			
 			c.setIcon(newAmbulanceIcon);
-			reached[car.vin] = "false";
 			
 		}
 	}
@@ -192,7 +183,7 @@ var TrafficMonitor = (function(conf) {
 		init : init,
 		setClickAction : setClickAction,
 		update : update,
-		updateTarget : updateTarget,
+		setEmergency: setEmergency,
 		refresh : refresh
 	};
 
