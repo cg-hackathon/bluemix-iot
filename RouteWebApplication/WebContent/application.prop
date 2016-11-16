@@ -1,8 +1,8 @@
 # Unique application id
-id = TODO use case 1 Enter a unique application id
+id = routewebapp13test
 # Authentication method
 auth-method = apikey
 # API-Key
-auth-key = TODO use case 1 Enter your api-key
+auth-key = a-5rcpia-hxwn2ipopc
 # API-Token
-auth-token = TODO use case 1 Enter your api-token
+auth-token = tSzH3*7wou5pLfZd4e

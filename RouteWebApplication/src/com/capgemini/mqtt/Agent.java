@@ -5,6 +5,7 @@ import java.util.Properties;
 import java.util.logging.Logger;
 import com.ibm.iotf.client.AbstractClient;
 import com.ibm.iotf.client.app.ApplicationClient;
+
 /**
  * 
  * @author cmammado
@@ -26,10 +27,6 @@ public class Agent {
 			client = new ApplicationClient(options);
 			// Connect to IBM Internet of Things Foundation
 			client.connect();
-			// Set event callback
-			client.setEventCallback(new AgentEventCallback(this));
-			// Subscribe to device events
-			client.subscribeToDeviceEvents();
 
 		} catch (Exception e) {
 			e.printStackTrace();

@@ -20,12 +20,17 @@
 	var traffic = TrafficMonitor({
 		map : "map",
 		controls : false,
-		latitude : 51.530784, 
-		longitude :-0.102517, 
+		latitude : 51.530784,
+		longitude : -0.102517,
 		zoom : 15,
 		zoomMinus : 8,
-		zoomPlus : 3
+		zoomPlus : 3,
 	});
+
+	// Turn to true after the first emergency to control Geospatial
+	var firstEmergency = {
+		status : false
+	};
 
 	var wsOptions = {
 		debug : true,
@@ -34,34 +39,80 @@
 		maxReconnectAttempts : 10
 	};
 
-	// TODO use case 1 Enter the path of configured Websocket in your Node-RED instance
-	var websocket = new ReconnectingWebSocket(
-			"ws://your_websocket_url", null, wsOptions);
-	websocket.onmessage = function(e) {
+	var websocketLocation = new ReconnectingWebSocket(
+			"ws://nodered13test.mybluemix.net/location", null, wsOptions);
+
+	websocketLocation.onmessage = function(e) {
+
 		var d = JSON.parse(e.data).d;
 		if (d.hasOwnProperty('vin')) {
 			traffic.update(d);
 		}
+
 	};
 
-	// Send the position of emergency (lat und lng) to the REST service that you defined by clicking on the map 
-	traffic.setClickAction(function(lat, lng, id) {
+	var websocketEmergency = new ReconnectingWebSocket(
+			"ws://nodered13test.mybluemix.net/emergency", null, wsOptions);
+
+	websocketEmergency.onmessage = function(e) {
+		var d = JSON.parse(e.data).d;
+		if (d.hasOwnProperty('emergencyId')) {
+			traffic.showEmergency(d);
+		}
+
+	};
+
+	// Handling the different Eventtypes of Geospatial
+	var geosocket = new ReconnectingWebSocket(
+			"ws://nodered13test.mybluemix.net/geoAlert", null, wsOptions);
+	geosocket.onmessage = function(e) {
+		var d = JSON.parse(e.data);
+		
+		if (d.deviceInfo.hasOwnProperty('id')) {
+
+			var eventType = d.eventType;
+			
+			if (eventType == "Entry") {
+
+				console.log(d.deviceInfo.id + " ENTRY");
+				traffic.updatecarAlert(d, true);
+
+			} else if (eventType == "Exit") {
+
+				console.log(d.deviceInfo.id + " EXIT");
+				traffic.updatecarAlert(d, false);			
+
+			} else if (eventType.includes("Hangout")) {
+				//console.log(d.deviceInfo.id + " HANGOUT");
+				traffic.updatecarAlert(d, true);
+			}
+		}
+	};
+
+	// send the position of emergency (lat und lng) to the REST service that you defined by clicking on the map 
+	traffic.setClickAction(function(lat, lng) {
 
 		var location = {
 			cmd : "emergency",
-			emergencyID : id,
 			latitude : lat,
-			longitude : lng
+			longitude : lng,
+			isfirstEmergency : firstEmergency.status
+
 		};
 
-		// TODO use case 2 Enter the URL of your defined REST service
+		if (firstEmergency.status == false) {
+			firstEmergency.status = true;
+		}
+
+		// call webservice on server
 		$.ajax({
-			url : 'url of your rest service',
+			url : '/RESTCALL/getEmergencyLocation',
 			type : 'POST',
 			data : JSON.stringify(location),
 			dataType : 'json',
 			contentType : "application/json; charset=utf-8"
 		});
+
 	});
 
 	window.addEventListener("load", traffic.init, false);
@@ -103,6 +154,5 @@
 			<div id="map"></div>
 		</div>
 	</div>
-</body>
 </body>
 </html>
