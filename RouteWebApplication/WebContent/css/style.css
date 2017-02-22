@@ -12,13 +12,49 @@ ul.navbar-nav > li > a {
 }
 
 div#map {
-	position: fixed;
+	position: absolute;
 	height: 100%;
+	width: 75%;
 	bottom: 0px;
 	top: 0px;
 	left: 0px;
 	right: 0px;
 	z-index: -1000;
+}
+
+div#infoBar {
+	margin-left: 85%;
+	height: 650px;
+	top: 5px;
+	width:30%;
+	
+}
+
+table#infoTable {
+	table-layout: fixed;
+	position: absolute;
+}
+
+div#caption {
+	position: absolute;
+	z-index: 1;
+}
+
+th, td {
+	text-align: center;
+}
+
+td {
+	width: 180%;
+}
+
+th#vehicleID {
+	width: 90%;
+
+}
+
+th#info {
+	width: 180%;
 }
 
 .h1, h1 {

@@ -93,12 +93,6 @@
 	<nav class="navbar navbar-default navbar-static-top">
 		<div class="container">
 			<div class="navbar-header">
-				<button type="button" class="navbar-toggle collapsed"
-					data-toggle="collapse" data-target="#fhue" aria-expanded="false">
-					<span class="sr-only">Toggle navigation</span> <span
-						class="icon-bar"></span> <span class="icon-bar"></span> <span
-						class="icon-bar"></span>
-				</button>
 				<a class="navbar-brand" href="#"><img
 					src="images/capgeminiLogo.png"></a>
 			</div>
@@ -106,17 +100,31 @@
 	</nav>
 	<div class="my-tab-pane" id="section-1">
 		<div class="container">
-			<div class="row">
-				<div class="col-sm-12">
+			<div class="col-sm-9" id="caption">
 					<h1>London Traffic Control</h1>
 				</div>
-			</div>
-		</div>
-		<div class="container">
-			<div class="row">
-				<div class="col-sm-12"></div>
-			</div>
-			<div id="map"></div>
+			<div class="col-sm-9" id="map"></div>
+			<div class="col-sm-2" id="infoBar">
+
+					<table class="table table-bordered text-center"
+						id="infoTable">
+						<thead>
+
+							<tr>
+								<th id="vehicleID">Vehicle ID</th>
+								<th id="info">Info</th>
+
+
+							</tr>
+
+						</thead>
+
+						<tbody>
+						
+
+						</tbody>
+					</table>
+				</div>
 		</div>
 	</div>
 </body>
