@@ -13,49 +13,47 @@ ul.navbar-nav > li > a {
 
 div#map {
 	position: absolute;
-	height: 100%;
+	height: 100vh;
 	width: 75%;
 	bottom: 0px;
 	top: 0px;
 	left: 0px;
 	right: 0px;
-	z-index: -1000;
+	z-index: 1;
 }
 
 div#infoBar {
 	margin-left: 85%;
-	height: 650px;
-	top: 5px;
-	width:30%;
+	width: 40vh;
+	height: 85vh;
+	overflow:auto;
 	
 }
 
-table#infoTable {
-	table-layout: fixed;
-	position: absolute;
+div#infoBarEmbedded {
+	margin-left: 85%;
+	top: 5px;
+	width:40vh;
+	height: 100vh;
+	overflow:auto;
+	
 }
+
+html, body {
+	
+	width:100%;
+	height: 100%;
+	overflow-y: hidden;
+	overflow-x:auto;
+}
+
 
 div#caption {
 	position: absolute;
-	z-index: 1;
+	z-index: 2;
 }
 
-th, td {
-	text-align: center;
-}
 
-td {
-	width: 180%;
-}
-
-th#vehicleID {
-	width: 90%;
-
-}
-
-th#info {
-	width: 180%;
-}
 
 .h1, h1 {
 	padding-bottom: 1em;
