@@ -19,6 +19,10 @@ var TrafficMonitor = (function(conf) {
 	var orders = {};
 	var circles = {};
 	var firstClicks = {};
+	
+	// Routes
+	var ambulanceRoutes = {};
+	var carRoutes = {};
 
 	var icon = {
 		car : L.MakiMarkers.icon({
@@ -179,13 +183,52 @@ var TrafficMonitor = (function(conf) {
 		circles[emergencyID] = circle;
 	}
 	
-	function drawPolyline(latlongs, lineColor){
-		L.polyline(latlongs, {color: lineColor}).addTo(map);
+	// Routes
+	
+	function updateAmbulanceRoute(car) {
+		var l = ambulanceRoutes[car.vin];
+		var lineColor = 'red';
+		var latlongs = car.nodes;	
+		
+		if (l === undefined) {
+			l = L.polyline(latlongs, {color: lineColor});
+			l.ts = new Date();
+			l.addTo(map);
+			ambulanceRoutes[car.vin] = l;
+		}
+		
+		l.setLatLngs(latlongs);
+		l.ts = new Date();
 	}
-
+	
+	function updateCarRoute(car){
+		var l = carRoutes[car.vin];
+		var lineColor = 'blue';
+		var latlongs = car.nodes;
+		
+		if (l === undefined) {
+			l = L.polyline(latlongs, {color: lineColor});
+			l.ts = new Date();
+			l.addTo(map);
+			carRoutes[car.vin] = l;
+		}
+		
+		l.setLatLngs(latlongs);
+		l.ts = new Date();
+	}
+	
+	function updateRoute(car) {
+		if (car.vin.indexOf("ambulance") > -1) {
+			updateAmbulanceRoute(car);
+		} else {
+			updateCarRoute(car);
+		}
+	}
+	
 	function updateAmbulance(car) {
-
+		
 		var c = ambulances[car.vin];
+		
 		if (c === undefined) {
 			c = L.Marker.movingMarker([ [ car.latitude, car.longitude ] ], [],
 					{
@@ -233,7 +276,7 @@ var TrafficMonitor = (function(conf) {
 		update : update,
 		showEmergency : showEmergency,
 		refresh : refresh,
-		drawPolyline: drawPolyline
+		updateRoute: updateRoute
 	};
 
 });

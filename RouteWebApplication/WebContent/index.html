@@ -44,8 +44,32 @@
 		if (d.hasOwnProperty('vin')) {
 			traffic.update(d);
 		}
-	
 	}; 
+	
+	// Routes
+	var websocketRoutes = new ReconnectingWebSocket(
+			"wss://nodered-8.mybluemix.net/routes", null, wsOptions);
+	
+	websocketRoutes.onmessage = function(e) {
+		var d = JSON.parse(e.data).d;
+		d.nodes = convertRoutesToArray(d.nodes);
+		if (d.hasOwnProperty('vin')) {
+			traffic.updateRoute(d);
+		}
+	}
+	
+	// Converts the server data
+	var convertRoutesToArray = function(routes) {
+		var routesArray = [];
+		for(var routeObjIndex in routes) {
+			var routeObj = routes[routeObjIndex];
+			var route = [];
+			route.push(routeObj.latitude);
+			route.push(routeObj.longitude);
+			routesArray.push(route);
+		}
+		return routesArray;
+	}
 	
 	
 	// TODO practice 3: Enter the path of configured Websocket for emergency-locations in your Node-RED instance
