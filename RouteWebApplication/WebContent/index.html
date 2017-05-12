@@ -36,7 +36,7 @@
 
 	// TODO practice 2: Enter the path of configured Websocket for vehicle-locations in your Node-RED instance
 	var websocketLocation = new ReconnectingWebSocket(
-			"wss://ambulance-main-iot.mybluemix.net/location", null, wsOptions);
+			"wss://nodered-8.mybluemix.net/location", null, wsOptions);
 
  	websocketLocation.onmessage = function(e) {
 
@@ -50,7 +50,7 @@
 	
 	// TODO practice 3: Enter the path of configured Websocket for emergency-locations in your Node-RED instance
 	var websocketEmergency = new ReconnectingWebSocket(
-			"wss://ambulance-main-iot.mybluemix.net/emergency", null, wsOptions);
+			"wss://nodered-8.mybluemix.net/emergency", null, wsOptions);
 	
  	websocketEmergency.onmessage = function(e) {
 		var d = JSON.parse(e.data).d;
@@ -72,7 +72,7 @@
 		// call webservice on server
 		$.ajax({
 			// TODO practice 3: set path to your own routewebapplication
-			url : 'https://routewebapplication.mybluemix.net/getEmergencyLocation',
+			url : 'https://routewebapplication-8.mybluemix.net/getEmergencyLocation',
 			type : 'POST',
 			data : JSON.stringify(location),
 			dataType : 'json',
