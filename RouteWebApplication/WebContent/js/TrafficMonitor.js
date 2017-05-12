@@ -183,9 +183,21 @@ var TrafficMonitor = (function(conf) {
 		circles[emergencyID] = circle;
 	}
 	
+	// Ambulance or Car checker
+	
+	function isAmbulance(car){
+		if (car.vin.indexOf("ambulance") > -1) {
+			return true;
+		} else {
+			return false;
+		} 
+	}
+	
+	
 	// Routes
 	
 	function updateAmbulanceRoute(car) {
+		
 		var l = ambulanceRoutes[car.vin];
 		var lineColor = 'red';
 		var latlongs = car.nodes;	
@@ -218,11 +230,81 @@ var TrafficMonitor = (function(conf) {
 	}
 	
 	function updateRoute(car) {
-		if (car.vin.indexOf("ambulance") > -1) {
-			updateAmbulanceRoute(car);
-		} else {
-			updateCarRoute(car);
+		var l = {};
+		var lineColor = '';
+		
+		if(isAmbulance(car)){
+			l = ambulanceRoutes[car.vin];
+			lineColor = 'red';
+		} else { 
+			l = carRoutes[car.vin];
+			lineColor = 'blue';
 		}
+		
+		var latlongs = car.nodes;
+		
+		if (l === undefined) {
+			l = L.polyline(latlongs, {color: lineColor});
+			l.ts = new Date();
+			l.addTo(map);
+			
+			if(isAmbulance(car)) {
+				ambulanceRoutes[car.vin] = l;
+			} else {
+				carRoutes[car.vin] = l;
+			}
+		}
+		
+		l.setLatLngs(latlongs);
+		l.ts = new Date();
+	}
+	
+	// line is [point, point] 
+	function getDistance(line,point){
+		var x0 = point[0];
+		var y0 = point[1];
+		
+		var x1 = line[0].lat;
+		var y1 = line[0].lng;
+		
+		var x2 = line[1].lat;
+		var y2 = line[1].lng;
+		
+		return Math.abs((x2-x1)*(y1-y0)-(x1-x0)*(y2-y1))/Math.sqrt(Math.pow(x2-x1,2)+Math.pow(y2-y1,2));
+	}
+	
+	function removeRouteFromPast(car) {
+		var l = {};
+		if(isAmbulance(car)){
+			l = ambulanceRoutes[car.vin];
+		} else {
+			l = carRoutes[car.vin];
+		}
+		
+		// if route is not set, skip.
+		if(l === undefined) {
+			return;
+		}
+		
+		var routes = l._latlngs;
+		var position = [car.latitude,car.longitude];
+		
+		var threshold = 0.0001;
+		for(var routeIndex = 0; routeIndex < routes.length - 1; routeIndex++) {
+			var d = getDistance([routes[routeIndex],routes[routeIndex+1]],position);
+			if (d < threshold) {
+				routes[routeIndex].lat = position[0];
+				routes[routeIndex].lng = position[1];
+				routes = routes.reverse();
+				for(var removeIndex = 0; removeIndex < routeIndex; removeIndex++){
+					routes.pop();
+				}
+				routes.reverse();
+			}
+		}
+		l.setLatLngs(routes);
+		
+		
 	}
 	
 	function updateAmbulance(car) {
@@ -268,6 +350,9 @@ var TrafficMonitor = (function(conf) {
 		} else {
 			updateCar(car);
 		}
+	
+		// Route
+		removeRouteFromPast(car);
 	}
 
 	return {
