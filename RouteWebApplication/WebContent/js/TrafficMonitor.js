@@ -178,6 +178,10 @@ var TrafficMonitor = (function(conf) {
 		var circle = L.circle([ lat, lng ], radius).addTo(map);
 		circles[emergencyID] = circle;
 	}
+	
+	function drawPolyline(latlongs, lineColor){
+		L.polyline(latlongs, {color: lineColor}).addTo(map);
+	}
 
 	function updateAmbulance(car) {
 
@@ -228,7 +232,8 @@ var TrafficMonitor = (function(conf) {
 		setClickAction : setClickAction,
 		update : update,
 		showEmergency : showEmergency,
-		refresh : refresh
+		refresh : refresh,
+		drawPolyline: drawPolyline
 	};
 
 });
