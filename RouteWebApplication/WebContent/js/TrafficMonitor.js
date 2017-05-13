@@ -26,6 +26,7 @@ var TrafficMonitor = (function(conf) {
 	
 	// Heatmap
 	var intensity = 0.2;
+	var heatRadius = 10;
 	var routesEnabled = false;
 	var heatmapEnabled = false;
 	var ambulanceLocations = [];
@@ -312,9 +313,15 @@ var TrafficMonitor = (function(conf) {
 		if (car.vin.indexOf("ambulance") > -1) {
 			updateAmbulance(car);
 			ambulanceLocations.push([car.latitude,car.longitude,intensity]);
+			if(heatmapEnabled){
+				heat.addLatLng([car.latitude,car.longitude,intensity]);
+			}
 		} else {
 			updateCar(car);
 			carLocations.push([car.latitude,car.longitude, intensity]);
+			if(heatmapEnabled){
+				heat.addLatLng([car.latitude,car.longitude,intensity]);
+			}
 		}
 	
 		// Route FIXME
@@ -352,7 +359,7 @@ var TrafficMonitor = (function(conf) {
 			heat = {};
 		} else {
 			heatmapEnabled = true;
-			heat = L.heatLayer(ambulanceLocations.concat(carLocations), {radius: 25});
+			heat = L.heatLayer(ambulanceLocations.concat(carLocations), {radius: heatRadius});
 			map.addLayer(heat);
 		}
 	}
