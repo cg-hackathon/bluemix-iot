@@ -119,8 +119,6 @@
 		$("#heatToggle").toggleClass("green");
 		traffic.toggleHeatmap();
 	}
-	
-
 	$(document).ready(function() {
 
 		traffic.init();
@@ -143,6 +141,9 @@
 			</div>
 			<div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
 		      <ul class="nav navbar-nav navbar-right">
+		 		
+		        <li><a href="#" id="uploadHeatmap" onclick="traffic.loadHeatmap()">Upload Heatmap</a></li>
+		        <li><a href="#" id="downloadHeatmap" onclick="traffic.storeHeatmap()">Download Heatmap</a></li>
 		        <li><a href="#" id="routeToggle" onclick="toggleRoutes(event)">Toggle Routes</a></li>
 				<li><a href="#" id="heatToggle" onclick="toggleHeatmap(event)">Toggle Heatmap</a></li>
 		      </ul>

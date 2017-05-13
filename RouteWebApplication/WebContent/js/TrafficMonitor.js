@@ -280,6 +280,9 @@ var TrafficMonitor = (function(conf) {
 			routes.pop();
 			routes.push(first);
 			routes.reverse();
+			if(routes.length < 2){
+				return;
+			}
 			lastDistance[car.vin] = nodeDistance([routes[0].lat,routes[0].lng],[routes[1].lat,routes[1].lng]);
 		}
 		l.setLatLngs(routes);
@@ -376,6 +379,16 @@ var TrafficMonitor = (function(conf) {
 			map.addLayer(heat);
 		}
 	}
+	
+	function storeHeatmap() {
+		localStorage.setItem('ambulanceHeat', JSON.stringify(ambulanceLocations));
+		localStorage.setItem('carHeat', JSON.stringify(carLocations))
+	}
+	
+	function loadHeatmap(){
+		ambulanceLocations = JSON.parse(localStorage.getItem('ambulanceHeat'));
+		carLocations = JSON.parse(localStorage.getItem('carHeat'));
+	}
 
 	return {
 		init : init,
@@ -385,7 +398,9 @@ var TrafficMonitor = (function(conf) {
 		refresh : refresh,
 		updateRoute: updateRoute,
 		toggleRoutes: toggleRoutes,
-		toggleHeatmap: toggleHeatmap
+		toggleHeatmap: toggleHeatmap,
+		storeHeatmap: storeHeatmap,
+		loadHeatmap: loadHeatmap
 	};
 
 });
