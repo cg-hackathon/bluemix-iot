@@ -23,6 +23,7 @@ var TrafficMonitor = (function(conf) {
 	// Routes
 	var ambulanceRoutes = [];
 	var carRoutes = [];
+	var lastDistance = [];
 	
 	// Heatmap
 	var intensity = 0.2;
@@ -205,8 +206,8 @@ var TrafficMonitor = (function(conf) {
 	
 	// Routes
 	
-	function updateRoute(car) {
-		var l = {};
+	function drawRoute(car){
+		var l = {}
 		var lineColor = '';
 		
 		if(isAmbulance(car)){
@@ -218,7 +219,7 @@ var TrafficMonitor = (function(conf) {
 		}
 		
 		var latlongs = car.nodes;
-		
+				
 		if (l === undefined) {
 			l = L.polyline(latlongs, {color: lineColor});
 			l.ts = new Date();
@@ -238,6 +239,12 @@ var TrafficMonitor = (function(conf) {
 		}
 	}
 	
+	function updateRoute(car) {
+		if(car.nodes.length < 2){ return; }
+		lastDistance[car.vin] = nodeDistance([car.nodes[0][0],car.nodes[0][1]],[car.nodes[1][0],car.nodes[1][1]]);
+		drawRoute(car);
+	}
+	
 	function removeRouteFromPast(car) {
 		var l = {};
 		if(isAmbulance(car)){
@@ -255,21 +262,27 @@ var TrafficMonitor = (function(conf) {
 		var position = [car.latitude,car.longitude];
 		
 		var threshold = 0.0001;
-		for(var routeIndex = 0; routeIndex < routes.length - 1; routeIndex++) {
-			var d = getDistance([routes[routeIndex],routes[routeIndex+1]],position);
-			if ((d < threshold) && (isInRange([routes[routeIndex],routes[routeIndex+1]],position))) {
-				routes[routeIndex].lat = position[0];
-				routes[routeIndex].lng = position[1]
-				routes = routes.reverse();
-				for(var removeIndex = 0; removeIndex < routeIndex; removeIndex++){
-					routes.pop();
-				}
-				routes.reverse();
-			}
+		
+		if(routes.length < 2){
+			return;
+		}
+		
+		routes[0].lat = position[0];
+		routes[0].lng = position[1];
+		
+		var distance = nodeDistance([routes[0].lat,routes[0].lng],[routes[1].lat,routes[1].lng]);
+		if(distance <= lastDistance[car.vin]){
+			lastDistance[car.vin] = distance;
+			
+		} else {
+			routes.reverse();
+			var first = routes.pop();
+			routes.pop();
+			routes.push(first);
+			routes.reverse();
+			lastDistance[car.vin] = nodeDistance([routes[0].lat,routes[0].lng],[routes[1].lat,routes[1].lng]);
 		}
 		l.setLatLngs(routes);
-		
-		console.log(isInRange([[0,0],[0,2]],[-1,-1]));
 	}
 	
 	function updateAmbulance(car) {
@@ -325,7 +338,7 @@ var TrafficMonitor = (function(conf) {
 		}
 	
 		// Route FIXME
-		//removeRouteFromPast(car);
+		removeRouteFromPast(car);
 	}
 	
 	function toggleRoutes(){
