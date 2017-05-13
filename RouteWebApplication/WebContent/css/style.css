@@ -28,3 +28,7 @@ div#map {
 .leaflet-popup-content-wrapper {
   background-color: white
 }
+
+.green, .green:hover, .green:active, .green:focus{
+	background-color: #60ff85 !important;
+}

@@ -3,7 +3,7 @@ applications:
   host: routewebapplication
   name: RouteWebApplication
   domain: mybluemix.net
-  path: RouteWebApplication.war
+  path: /home/corbatto/Hackathon17/Hackathon/Hackathon-64Bit.v1.2/workspace/bluemix-iot-client-map/RouteWebApplication/RouteWebApplication.war
   instances: 1
-  memory: 512M
+  memory: 256M
  

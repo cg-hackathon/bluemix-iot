@@ -8,7 +8,7 @@ var TrafficMonitor = (function(conf) {
 			zoom : 15,
 			zoomMinus : 0,
 			zoomPlus : 0,
-			controls : false
+			controls : false,
 		}, conf);
 	}
 
@@ -19,7 +19,21 @@ var TrafficMonitor = (function(conf) {
 	var orders = {};
 	var circles = {};
 	var firstClicks = {};
-
+	
+	// Routes
+	var ambulanceRoutes = [];
+	var carRoutes = [];
+	var lastDistance = [];
+	
+	// Heatmap
+	var intensity = 0.2;
+	var heatRadius = 10;
+	var routesEnabled = false;
+	var heatmapEnabled = false;
+	var ambulanceLocations = [];
+	var carLocations = [];
+	var heat = {};
+	
 	var icon = {
 		car : L.MakiMarkers.icon({
 			icon : "car",
@@ -83,7 +97,7 @@ var TrafficMonitor = (function(conf) {
 		L.control.zoom({
 			position : 'bottomright'
 		}).addTo(map);
-
+	
 		map.on('click', function(e) {
 			// clickAction(e.latlng.lat, e.latlng.lng);
 			updateTarget(e.latlng.lat, e.latlng.lng);
@@ -178,10 +192,106 @@ var TrafficMonitor = (function(conf) {
 		var circle = L.circle([ lat, lng ], radius).addTo(map);
 		circles[emergencyID] = circle;
 	}
-
+	
+	// Ambulance or Car checker
+	
+	function isAmbulance(car){
+		if (car.vin.indexOf("ambulance") > -1) {
+			return true;
+		} else {
+			return false;
+		} 
+	}
+	
+	
+	// Routes
+	
+	function drawRoute(car){
+		var l = {}
+		var lineColor = '';
+		
+		if(isAmbulance(car)){
+			l = ambulanceRoutes[car.vin];
+			lineColor = 'red';
+		} else { 
+			l = carRoutes[car.vin];
+			lineColor = 'blue';
+		}
+		
+		var latlongs = car.nodes;
+				
+		if (l === undefined) {
+			l = L.polyline(latlongs, {color: lineColor});
+			l.ts = new Date();
+			
+			if(isAmbulance(car)) {
+				ambulanceRoutes[car.vin] = l;
+			} else {
+				carRoutes[car.vin] = l;
+			}
+		}
+		
+		l.setLatLngs(latlongs);
+		l.ts = new Date();
+		
+		if(routesEnabled){
+			map.addLayer(l);
+		}
+	}
+	
+	function updateRoute(car) {
+		if(car.nodes.length < 2){ return; }
+		lastDistance[car.vin] = nodeDistance([car.nodes[0][0],car.nodes[0][1]],[car.nodes[1][0],car.nodes[1][1]]);
+		drawRoute(car);
+	}
+	
+	function removeRouteFromPast(car) {
+		var l = {};
+		if(isAmbulance(car)){
+			l = ambulanceRoutes[car.vin];
+		} else {
+			l = carRoutes[car.vin];
+		}
+		
+		// if route is not set, skip.
+		if(l === undefined) {
+			return;
+		}
+		
+		var routes = l._latlngs;
+		var position = [car.latitude,car.longitude];
+		
+		var threshold = 0.0001;
+		
+		if(routes.length < 2){
+			return;
+		}
+		
+		routes[0].lat = position[0];
+		routes[0].lng = position[1];
+		
+		var distance = nodeDistance([routes[0].lat,routes[0].lng],[routes[1].lat,routes[1].lng]);
+		if(distance <= lastDistance[car.vin]){
+			lastDistance[car.vin] = distance;
+			
+		} else {
+			routes.reverse();
+			var first = routes.pop();
+			routes.pop();
+			routes.push(first);
+			routes.reverse();
+			if(routes.length < 2){
+				return;
+			}
+			lastDistance[car.vin] = nodeDistance([routes[0].lat,routes[0].lng],[routes[1].lat,routes[1].lng]);
+		}
+		l.setLatLngs(routes);
+	}
+	
 	function updateAmbulance(car) {
-
+		
 		var c = ambulances[car.vin];
+		
 		if (c === undefined) {
 			c = L.Marker.movingMarker([ [ car.latitude, car.longitude ] ], [],
 					{
@@ -218,9 +328,66 @@ var TrafficMonitor = (function(conf) {
 	function update(car) {
 		if (car.vin.indexOf("ambulance") > -1) {
 			updateAmbulance(car);
+			ambulanceLocations.push([car.latitude,car.longitude,intensity]);
+			if(heatmapEnabled){
+				heat.addLatLng([car.latitude,car.longitude,intensity]);
+			}
 		} else {
 			updateCar(car);
+			carLocations.push([car.latitude,car.longitude, intensity]);
+			if(heatmapEnabled){
+				heat.addLatLng([car.latitude,car.longitude,intensity]);
+			}
 		}
+	
+		// Route FIXME
+		removeRouteFromPast(car);
+	}
+	
+	function toggleRoutes(){
+		if(routesEnabled){
+			routesEnabled = false;
+			for(var car in ambulanceRoutes){
+				if(ambulanceRoutes[car] !== undefined){
+					map.removeLayer(ambulanceRoutes[car]);
+				}
+			}
+			for(var car in carRoutes){
+				if(carRoutes[car] !== undefined){
+					map.removeLayer(carRoutes[car]);
+				}
+			}
+		} else {
+			routesEnabled = true;
+			for(var car in ambulanceRoutes){
+				map.addLayer(ambulanceRoutes[car]);
+			}
+			for(var car in carRoutes){
+				map.addLayer(carRoutes[car]);
+			}
+		}
+	} 
+	
+	function toggleHeatmap(){
+		if(heatmapEnabled){
+			heatmapEnabled = false;
+			map.removeLayer(heat);
+			heat = {};
+		} else {
+			heatmapEnabled = true;
+			heat = L.heatLayer(ambulanceLocations.concat(carLocations), {radius: heatRadius});
+			map.addLayer(heat);
+		}
+	}
+	
+	function storeHeatmap() {
+		localStorage.setItem('ambulanceHeat', JSON.stringify(ambulanceLocations));
+		localStorage.setItem('carHeat', JSON.stringify(carLocations))
+	}
+	
+	function loadHeatmap(){
+		ambulanceLocations = JSON.parse(localStorage.getItem('ambulanceHeat'));
+		carLocations = JSON.parse(localStorage.getItem('carHeat'));
 	}
 
 	return {
@@ -228,7 +395,12 @@ var TrafficMonitor = (function(conf) {
 		setClickAction : setClickAction,
 		update : update,
 		showEmergency : showEmergency,
-		refresh : refresh
+		refresh : refresh,
+		updateRoute: updateRoute,
+		toggleRoutes: toggleRoutes,
+		toggleHeatmap: toggleHeatmap,
+		storeHeatmap: storeHeatmap,
+		loadHeatmap: loadHeatmap
 	};
 
 });

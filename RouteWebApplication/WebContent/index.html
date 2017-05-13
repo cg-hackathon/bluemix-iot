@@ -11,6 +11,8 @@
 <script src="js/MovingMarker.js"></script>
 <script src="js/TrafficMonitor.js"></script>
 <script src="js/jquery-1.10.2.js"></script>
+<script src="js/leaflet-heat.js"></script>
+<script src="js/PositionCalculator.js"></script>
 <title>London Traffic Control</title>
 <link rel="stylesheet" href="css/bootstrap.min.css" />
 <link rel="stylesheet" href="css/leaflet.css" />
@@ -36,7 +38,7 @@
 
 	// TODO practice 2: Enter the path of configured Websocket for vehicle-locations in your Node-RED instance
 	var websocketLocation = new ReconnectingWebSocket(
-			"wss://ambulance-main-iot.mybluemix.net/location", null, wsOptions);
+			"wss://nodered-8.mybluemix.net/location", null, wsOptions);
 
  	websocketLocation.onmessage = function(e) {
 
@@ -44,13 +46,37 @@
 		if (d.hasOwnProperty('vin')) {
 			traffic.update(d);
 		}
-	
 	}; 
+	
+	// Routes
+	var websocketRoutes = new ReconnectingWebSocket(
+			"wss://nodered-8.mybluemix.net/routes", null, wsOptions);
+	
+	websocketRoutes.onmessage = function(e) {
+		var d = JSON.parse(e.data).d;
+		d.nodes = convertRoutesToArray(d.nodes);
+		if (d.hasOwnProperty('vin')) {
+			traffic.updateRoute(d);
+		}
+	}
+	
+	// Converts the server data
+	var convertRoutesToArray = function(routes) {
+		var routesArray = [];
+		for(var routeObjIndex in routes) {
+			var routeObj = routes[routeObjIndex];
+			var route = [];
+			route.push(routeObj.latitude);
+			route.push(routeObj.longitude);
+			routesArray.push(route);
+		}
+		return routesArray;
+	}
 	
 	
 	// TODO practice 3: Enter the path of configured Websocket for emergency-locations in your Node-RED instance
 	var websocketEmergency = new ReconnectingWebSocket(
-			"wss://ambulance-main-iot.mybluemix.net/emergency", null, wsOptions);
+			"wss://nodered-8.mybluemix.net/emergency", null, wsOptions);
 	
  	websocketEmergency.onmessage = function(e) {
 		var d = JSON.parse(e.data).d;
@@ -72,7 +98,7 @@
 		// call webservice on server
 		$.ajax({
 			// TODO practice 3: set path to your own routewebapplication
-			url : 'https://routewebapplication.mybluemix.net/getEmergencyLocation',
+			url : 'https://routewebapplication-8.mybluemix.net/getEmergencyLocation',
 			type : 'POST',
 			data : JSON.stringify(location),
 			dataType : 'json',
@@ -81,7 +107,18 @@
 	});
 
 	window.addEventListener("load", traffic.init, false);
-
+	
+	var toggleRoutes = function(event){
+		//event.preventDefault();
+		$("#routeToggle").toggleClass("green");
+		traffic.toggleRoutes();
+	}
+	
+	var toggleHeatmap = function(event){
+		//event.preventDefault();
+		$("#heatToggle").toggleClass("green");
+		traffic.toggleHeatmap();
+	}
 	$(document).ready(function() {
 
 		traffic.init();
@@ -101,6 +138,16 @@
 				</button>
 				<a class="navbar-brand" href="#"><img
 					src="images/capgeminiLogo.png"></a>
+			</div>
+			<div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+		      <ul class="nav navbar-nav navbar-right">
+		 		
+		        <li><a href="#" id="uploadHeatmap" onclick="traffic.loadHeatmap()">Upload Heatmap</a></li>
+		        <li><a href="#" id="downloadHeatmap" onclick="traffic.storeHeatmap()">Download Heatmap</a></li>
+		        <li><a href="#" id="routeToggle" onclick="toggleRoutes(event)">Toggle Routes</a></li>
+				<li><a href="#" id="heatToggle" onclick="toggleHeatmap(event)">Toggle Heatmap</a></li>
+		      </ul>
+		    </div><!-- /.navbar-collapse -->
 			</div>
 		</div>
 	</nav>
