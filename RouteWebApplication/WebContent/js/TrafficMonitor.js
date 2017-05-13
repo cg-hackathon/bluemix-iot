@@ -8,7 +8,7 @@ var TrafficMonitor = (function(conf) {
 			zoom : 15,
 			zoomMinus : 0,
 			zoomPlus : 0,
-			controls : false
+			controls : false,
 		}, conf);
 	}
 
@@ -21,9 +21,17 @@ var TrafficMonitor = (function(conf) {
 	var firstClicks = {};
 	
 	// Routes
-	var ambulanceRoutes = {};
-	var carRoutes = {};
-
+	var ambulanceRoutes = [];
+	var carRoutes = [];
+	
+	// Heatmap
+	var intensity = 0.2;
+	var routesEnabled = false;
+	var heatmapEnabled = false;
+	var ambulanceLocations = [];
+	var carLocations = [];
+	var heat = {};
+	
 	var icon = {
 		car : L.MakiMarkers.icon({
 			icon : "car",
@@ -87,7 +95,7 @@ var TrafficMonitor = (function(conf) {
 		L.control.zoom({
 			position : 'bottomright'
 		}).addTo(map);
-
+	
 		map.on('click', function(e) {
 			// clickAction(e.latlng.lat, e.latlng.lng);
 			updateTarget(e.latlng.lat, e.latlng.lng);
@@ -196,39 +204,6 @@ var TrafficMonitor = (function(conf) {
 	
 	// Routes
 	
-	function updateAmbulanceRoute(car) {
-		
-		var l = ambulanceRoutes[car.vin];
-		var lineColor = 'red';
-		var latlongs = car.nodes;	
-		
-		if (l === undefined) {
-			l = L.polyline(latlongs, {color: lineColor});
-			l.ts = new Date();
-			l.addTo(map);
-			ambulanceRoutes[car.vin] = l;
-		}
-		
-		l.setLatLngs(latlongs);
-		l.ts = new Date();
-	}
-	
-	function updateCarRoute(car){
-		var l = carRoutes[car.vin];
-		var lineColor = 'blue';
-		var latlongs = car.nodes;
-		
-		if (l === undefined) {
-			l = L.polyline(latlongs, {color: lineColor});
-			l.ts = new Date();
-			l.addTo(map);
-			carRoutes[car.vin] = l;
-		}
-		
-		l.setLatLngs(latlongs);
-		l.ts = new Date();
-	}
-	
 	function updateRoute(car) {
 		var l = {};
 		var lineColor = '';
@@ -246,7 +221,6 @@ var TrafficMonitor = (function(conf) {
 		if (l === undefined) {
 			l = L.polyline(latlongs, {color: lineColor});
 			l.ts = new Date();
-			l.addTo(map);
 			
 			if(isAmbulance(car)) {
 				ambulanceRoutes[car.vin] = l;
@@ -257,20 +231,10 @@ var TrafficMonitor = (function(conf) {
 		
 		l.setLatLngs(latlongs);
 		l.ts = new Date();
-	}
-	
-	// line is [point, point] 
-	function getDistance(line,point){
-		var x0 = point[0];
-		var y0 = point[1];
 		
-		var x1 = line[0].lat;
-		var y1 = line[0].lng;
-		
-		var x2 = line[1].lat;
-		var y2 = line[1].lng;
-		
-		return Math.abs((x2-x1)*(y1-y0)-(x1-x0)*(y2-y1))/Math.sqrt(Math.pow(x2-x1,2)+Math.pow(y2-y1,2));
+		if(routesEnabled){
+			map.addLayer(l);
+		}
 	}
 	
 	function removeRouteFromPast(car) {
@@ -292,9 +256,9 @@ var TrafficMonitor = (function(conf) {
 		var threshold = 0.0001;
 		for(var routeIndex = 0; routeIndex < routes.length - 1; routeIndex++) {
 			var d = getDistance([routes[routeIndex],routes[routeIndex+1]],position);
-			if (d < threshold) {
+			if ((d < threshold) && (isInRange([routes[routeIndex],routes[routeIndex+1]],position))) {
 				routes[routeIndex].lat = position[0];
-				routes[routeIndex].lng = position[1];
+				routes[routeIndex].lng = position[1]
 				routes = routes.reverse();
 				for(var removeIndex = 0; removeIndex < routeIndex; removeIndex++){
 					routes.pop();
@@ -304,7 +268,7 @@ var TrafficMonitor = (function(conf) {
 		}
 		l.setLatLngs(routes);
 		
-		
+		console.log(isInRange([[0,0],[0,2]],[-1,-1]));
 	}
 	
 	function updateAmbulance(car) {
@@ -347,12 +311,50 @@ var TrafficMonitor = (function(conf) {
 	function update(car) {
 		if (car.vin.indexOf("ambulance") > -1) {
 			updateAmbulance(car);
+			ambulanceLocations.push([car.latitude,car.longitude,intensity]);
 		} else {
 			updateCar(car);
+			carLocations.push([car.latitude,car.longitude, intensity]);
 		}
 	
-		// Route
-		removeRouteFromPast(car);
+		// Route FIXME
+		//removeRouteFromPast(car);
+	}
+	
+	function toggleRoutes(){
+		if(routesEnabled){
+			routesEnabled = false;
+			for(var car in ambulanceRoutes){
+				if(ambulanceRoutes[car] !== undefined){
+					map.removeLayer(ambulanceRoutes[car]);
+				}
+			}
+			for(var car in carRoutes){
+				if(carRoutes[car] !== undefined){
+					map.removeLayer(carRoutes[car]);
+				}
+			}
+		} else {
+			routesEnabled = true;
+			for(var car in ambulanceRoutes){
+				map.addLayer(ambulanceRoutes[car]);
+			}
+			for(var car in carRoutes){
+				map.addLayer(carRoutes[car]);
+			}
+		}
+	} 
+	
+	function toggleHeatmap(){
+		if(heatmapEnabled){
+			heatmapEnabled = false;
+			map.removeLayer(heat);
+			heat = {};
+		} else {
+			heatmapEnabled = true;
+			heat = L.heatLayer(ambulanceLocations.concat(carLocations), {radius: 25});
+			map.addLayer(heat);
+		}
 	}
 
 	return {
@@ -361,7 +363,9 @@ var TrafficMonitor = (function(conf) {
 		update : update,
 		showEmergency : showEmergency,
 		refresh : refresh,
-		updateRoute: updateRoute
+		updateRoute: updateRoute,
+		toggleRoutes: toggleRoutes,
+		toggleHeatmap: toggleHeatmap
 	};
 
 });

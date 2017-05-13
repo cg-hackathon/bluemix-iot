@@ -11,6 +11,8 @@
 <script src="js/MovingMarker.js"></script>
 <script src="js/TrafficMonitor.js"></script>
 <script src="js/jquery-1.10.2.js"></script>
+<script src="js/leaflet-heat.js"></script>
+<script src="js/PositionCalculator.js"></script>
 <title>London Traffic Control</title>
 <link rel="stylesheet" href="css/bootstrap.min.css" />
 <link rel="stylesheet" href="css/leaflet.css" />
@@ -106,24 +108,23 @@
 
 	window.addEventListener("load", traffic.init, false);
 	
-	var handleButtonClick = function(event){
+	var toggleRoutes = function(event){
 		event.preventDefault();
-		console.log("Button pressed");
-		var latlong = [
-			[51.530784, -0.102517],
-			[51.530784, -0.103200],
-			[51.531090, -0.102520],
-		];
-		var lineColor = 'red';
-		traffic.drawPolyline(latlong, lineColor);
+		traffic.toggleRoutes();
 	}
+	
+	var toggleHeatmap = function(event){
+		event.preventDefault();
+		traffic.toggleHeatmap();
+	}
+	
 
 	$(document).ready(function() {
 
 		traffic.init();
 
 	});
-</script>color
+</script>
 </head>
 <body>
 	<nav class="navbar navbar-default navbar-static-top">
@@ -140,17 +141,8 @@
 			</div>
 			<div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
 		      <ul class="nav navbar-nav navbar-right">
-		        <li><a href="#" onclick="handleButtonClick(event)">Draw Polyline</a></li>
-		        <li class="dropdown">
-		          <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">Dropdown <span class="caret"></span></a>
-		          <ul class="dropdown-menu">
-		            <li><a href="#">Action</a></li>
-		            <li><a href="#">Another action</a></li>
-		            <li><a href="#">Something else here</a></li>
-		            <li role="separator" class="divider"></li>
-		            <li><a href="#">Separated link</a></li>
-		          </ul>
-		        </li>
+		        <li><a href="#" onclick="traffic.toggleRoutes(event)">Toggle Routes</a></li>
+				<li><a href="#" onclick="traffic.toggleHeatmap(event)">Toggle Heatmap</a></li>
 		      </ul>
 		    </div><!-- /.navbar-collapse -->
 			</div>
