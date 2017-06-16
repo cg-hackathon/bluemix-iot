@@ -191,6 +191,32 @@ var TrafficMonitor = (function(conf) {
 			c.ts = new Date();
 			c.addTo(map);
 			ambulances[car.vin] = c;
+			
+			if (car.isFree == 'true') {
+
+				addRow(car.vin, 'GPS : (' + car.latitude + ', ' + car.longitude
+						+ ') </br> Status : free');
+
+			} else {
+
+				addRow(car.vin, 'GPS : (' + car.latitude + ', ' + car.longitude
+						+ ') </br> Status : busy');
+
+			}
+		} else {
+			var content;
+			if (car.isFree == 'true') {
+				content = 'GPS : (' + car.latitude + ', ' + car.longitude
+						+ ') </br> Status : free';
+
+			} else {
+				content = '(' + car.latitude + ', ' + car.longitude
+						+ ') </br> Status : busy';
+			}
+
+			$('#infoTable').find('tr#' + car.vin).find('td:eq(1)').html(
+					content);
+
 		}
 
 		c.moveTo([ car.latitude, car.longitude ], (new Date() - c.ts));
@@ -208,10 +234,39 @@ var TrafficMonitor = (function(conf) {
 
 			c.ts = new Date();
 			c.addTo(map);
-			cars[car.vin] = c;
+			cars[car.vin] = c; 
+			
+			addRow(car.vin, 'GPS : (' + car.latitude + ', ' + car.longitude
+					+ ')');
+		} 
+		else {
+			var content = 'GPS : (' + car.latitude + ', ' + car.longitude + ')';
+			$('#infoTable').find('tr#' + car.vin).find('td:eq(1)').html(
+					content);
+
 		}
 		c.moveTo([ car.latitude, car.longitude ], (new Date() - c.ts));
 		c.ts = new Date();
+
+	}
+	
+	function addRow(vehicleID, info) {
+		var table = document.getElementById('infoTable')
+				.getElementsByTagName('tbody')[0];
+		var row = table.insertRow(0);
+		row.id = vehicleID;
+		var cell1 = row.insertCell(0);
+		var cell2 = row.insertCell(1);
+		cell1.innerHTML = vehicleID;
+		cell2.innerHTML = info;
+
+		var tbody = $('#infoTable').find('tbody');
+		var newRows = tbody.find('tr').sort(
+				function(a, b) {
+					return $('td:first', a).text().localeCompare(
+							$('td:first', b).text());
+				});
+		tbody.append(newRows);
 
 	}
 
