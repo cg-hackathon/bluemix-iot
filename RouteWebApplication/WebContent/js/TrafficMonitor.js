@@ -24,7 +24,7 @@ var TrafficMonitor = (function(conf) {
 	var routesEnabled = false;
 	var ambulanceRoutes = [];
 	var carRoutes = [];
-	var lastDistance = [];  
+	var lastDistance = [];
 
 	// Heatmap
 	var heatmapEnabled = false;
@@ -32,8 +32,6 @@ var TrafficMonitor = (function(conf) {
 	var heatRadius = 10;
 	var vehicleLocations = [];
 	var heat = {};
-
-	var currentPopupId; // Stores which vehicle or emergency (order) shows the pop-up.
 
 	var icon = {
 		car : L.MakiMarkers.icon({
@@ -151,16 +149,13 @@ var TrafficMonitor = (function(conf) {
 				});
 				order.addTo(map);
 				orders[emergency.emergencyId] = order;
+				order.bindPopup("emergency"); // need to bind a pop-up to be able to set its content and open it.
 				order.on('mouseover', function(e) {
-					currentPopupId = emergency.emergencyId;
 					order.openPopup();
-				});
-				order.on('click', function(e) { // Could use 'popupclose' here, but not for car markers.
-					currentPopupId = "-1";
 				});
 			}
 
-			order.bindPopup("<strong>Emergency" + "<br> Status: " + emergency.status + "</strong>");
+			order.setPopupContent("<strong>Emergency" + "<br> Status: " + emergency.status + "</strong>");
 
 		} else if (status == "ONGING") {
 			var order = orders[emergency.emergencyId];
@@ -171,12 +166,9 @@ var TrafficMonitor = (function(conf) {
 				});
 				order.addTo(map);
 				orders[emergency.emergencyId] = order;
+				order.bindPopup("emergency");
 				order.on('mouseover', function(e) {
-					currentPopupId = emergency.emergencyId;
 					order.openPopup();
-				});
-				order.on('click', function(e) {
-					currentPopupId = "-1";
 				});
 
 			} else {
@@ -192,7 +184,7 @@ var TrafficMonitor = (function(conf) {
 			ambulance.setIcon(newAmbulanceIcon);
 			ambulances[emergency.vin] = ambulance;
 
-			order.bindPopup("<strong>Emergency" + "<br> Status: " + emergency.status + "<br> Ambulance: " + emergency.vin + "</strong>");
+			order.setPopupContent("<strong>Emergency" + "<br> Status: " + emergency.status + "<br> Ambulance: " + emergency.vin + "</strong>");
 
 		} else if (status == "SOLVED") {
 			if (orders[emergency.emergencyId] !== undefined) {
@@ -203,12 +195,6 @@ var TrafficMonitor = (function(conf) {
 			}
 			ambulance.setIcon(icon.ambulance);
 			ambulances[emergency.vin] = ambulance;
-		}
-
-		if (currentPopupId == emergency.emergencyId) {
-			order.openPopup();
-		} else {
-			order.closePopup();
 		}
 
 	}
@@ -230,27 +216,19 @@ var TrafficMonitor = (function(conf) {
 			c.ts = new Date();
 			c.addTo(map);
 			ambulances[car.vin] = c;
+			c.bindPopup("ambulance");
 			c.on('mouseover', function(e) {
-				currentPopupId = car.vin;
 				c.openPopup();
-			});
-			c.on('click', function(e) { // Cannot use 'popupclose', because that is triggered continuously by c.closePopup();
-				currentPopupId = "-1";
 			});
 		}
 		c.moveTo([ car.latitude, car.longitude ], (new Date() - c.ts));
 		c.ts = new Date();
-
-		if (currentPopupId == car.vin) {
-			c.bindPopup("<strong>Latitude: " + car.latitude + "<br>Longitude: " + car.longitude + "<br>VIN: " + car.vin + "<br>IsFree: " + car.isFree + "</strong>");
-			c.openPopup();
-		} else {
-			c.closePopup();
-		}
+		c.setPopupContent("<strong>Latitude: " + car.latitude + "<br>Longitude: " + car.longitude + "<br>VIN: " + car.vin + "<br>IsFree: " + car.isFree + "</strong>");
 
 	}
 
 	function updateCar(car) {
+
 		var c = cars[car.vin];
 		if (c === undefined) {
 			c = L.Marker.movingMarker([ [ car.latitude, car.longitude ] ], [],
@@ -261,23 +239,14 @@ var TrafficMonitor = (function(conf) {
 			c.ts = new Date();
 			c.addTo(map);
 			cars[car.vin] = c;
+			c.bindPopup("car");
 			c.on('mouseover', function(e) {
-				currentPopupId = car.vin;
 				c.openPopup();
-			});
-			c.on('click', function(e) { // Cannot use 'popupclose', because that is triggered continuously by c.closePopup();
-				currentPopupId = "-1";
 			});
 		}
 		c.moveTo([ car.latitude, car.longitude ], (new Date() - c.ts));
 		c.ts = new Date();
-
-		if (currentPopupId == car.vin) {
-			c.bindPopup("<strong>Latitude: " + car.latitude + "<br>Longitude: " + car.longitude + "<br>VIN: " + car.vin + "</strong>");
-			c.openPopup();
-		} else {
-			c.closePopup();
-		}
+		c.setPopupContent("<strong>Latitude: " + car.latitude + "<br>Longitude: " + car.longitude + "<br>VIN: " + car.vin + "</strong>");
 
 	}
 
